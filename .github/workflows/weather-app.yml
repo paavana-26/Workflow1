@@ -1,0 +1,37 @@
+name: Weather App CI
+on: [push]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x] # This tests two versions at once!
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run App with Secret
+        env:
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: node app.js
+
+      - name: Create Build Artifact
+        run: |
+          mkdir dist
+          cp app.js dist/
+          zip -r weather-app-dist.zip dist/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-app-${{ matrix.node-version }}
+          path: weather-app-dist.zip
